@@ -44,54 +44,34 @@ class Mesh {
 		return VBO
 	}
 	public func draw(shader: Shader){
-//		print("drawing a Mesh")
 		var diffuseNr: GLuint = 0
 		var specularNr: GLuint = 0
-//		print("Check Mesh for Textures")
         if( textures.count != 0){
-//			print("Found Textures")
 		for i in 0...textures.count - 1 {
 			glActiveTexture(GLenum(GL_TEXTURE0 + i))
 			var number: String
 			let name: String = textures[i].type
 			var count = 0
 			if(name == "texture_diffuse"){
-//				print("found a diffuse texture")
 				 diffuseNr += 1
 				 count += 1
 
 			}
             else if(name == "texture_specular"){
-//				print("found a specular texture")
 				specularNr += 1
 				count += 1
             }
 			else {
-//				print("found nothing")
 				continue
 			}
-//			print("made it here")
-//			number =
 			let names = name.components(separatedBy: "[0-9]")
-	//		print("names: \(names)")
 			number = String(count)
-			//print("number: \(number)")
-	//		print("name + number: \(name + number)")
 		    glUniform1i(glGetUniformLocation(shader.getProgram(), name + number), GLint(i))
 			glBindTexture(GLenum(GL_TEXTURE_2D), textures[i].id)
 		}
-		//glActiveTexture(GLenum(GL_TEXTURE0))
-        }
-/*	    glActiveTexture(GLenum(GL_TEXTURE0))
-	    glBindTexture(GLenum(GL_TEXTURE_2D), textures[0].id)
-	    glUniform1i(glGetUniformLocation(shader.getProgram(), "ourTexture1"), 0)
-	    glActiveTexture(GLenum(GL_TEXTURE1))
-	    glBindTexture(GLenum(GL_TEXTURE_2D), textures[1].id)
-	    glUniform1i(glGetUniformLocation(shader.getProgram(), "ourTexture2"), 1)*/
+	}
 		glBindVertexArray(VAO)
- //       print("indices.count", indices.count)
-glDrawElements(GLenum(GL_TRIANGLES), GLsizei(indices.count), GLenum(GL_UNSIGNED_INT), nil)
-//		glDrawArrays(GLenum(GL_TRIANGLES), GLsizei(indices.count), GL_UNSIGNED_INT)
+		glDrawElements(GLenum(GL_TRIANGLES), GLsizei(indices.count), GLenum(GL_UNSIGNED_INT), nil)
 		glBindVertexArray(0)
         if(textures.count != 0){
             for a in 0...textures.count - 1 {

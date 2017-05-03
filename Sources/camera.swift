@@ -1,6 +1,5 @@
 import Foundation
 import SGLImage
-//import CGLFW3
 import SGLMath
 #if os(OSX)
     import OpenGL

@@ -1,6 +1,5 @@
 import Foundation
 import OpenGL
-//import CGLFW3
 
 public class Shader {
 	public private(set) var program:GLuint = 0
@@ -88,18 +87,6 @@ public class Shader {
 			glGetProgramInfoLog(program, logSize, nil, &infoLog)
 			return String(cString:infoLog)
 		}
-		/*
-		glGetProgramiv(program, GLenum(GL_LINK_STATUS), &success)
-		guard success == GL_TRUE else
-		{
-			var logSize:GLint = 0
-			glGetProgramiv(program, GLenum(GL_INFO_LOG_LENGTH), &logSize)
-			if logSize == 0 { return "" }
-			var infoLog = [GLchar](repeating:0, count: Int(logSize))
-			glGetProgramInfoLog(program, logSize, nil, &infoLog)
-			return String(cString:infoLog)
-		}
-         */
 		return nil
 
 	}
