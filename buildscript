@@ -1,0 +1,6 @@
+#!/bin/bash
+#swift build -Xswiftc -import-objc-header -Xswiftc Sources/opengl_includes.h -Xswiftc -I -Xswiftc /usr/local/include -Xswiftc -L -Xswiftc /usr/local/lib 
+
+mv Sources/mushroom.c ../../
+swift build -Xswiftc -import-objc-header -Xswiftc Sources/opengl_includes.h -Xswiftc -I -Xswiftc /usr/local/include -Xswiftc -L -Xswiftc /usr/local/lib -Xswiftc -lglfw -Xswiftc -lassimp
+mv ../../mushroom.c Sources/
