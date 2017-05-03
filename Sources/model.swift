@@ -34,14 +34,14 @@ let AI_SCENE_FLAGS_INCOMPLETE = 0x1
 	 processNode(node: (scene?.mRootNode)!, scene: &scene)
 	 aiReleaseImport( &scene! )
  }
- private func processNode(node: UnsafeRawPointer, scene: UnsafeRawPointer){
+ private func processNode(node: UnsafeRawPointer?, scene: UnsafeRawPointer?){
     if(node != nil && scene != nil){
-	 let tNode: aiNode? = node.assumingMemoryBound(to: aiNode.self).pointee
-	 var tScene: aiScene = scene.assumingMemoryBound(to: aiScene.self).pointee
+	 let tNode: aiNode? = node?.assumingMemoryBound(to: aiNode.self).pointee
+	 var tScene: aiScene = scene!.assumingMemoryBound(to: aiScene.self).pointee
     if(tNode?.mNumMeshes != 0){
 	 for i in 1...Int((tNode?.mNumMeshes)!) {
 		 var aMesh: aiMesh = tScene.mMeshes![Int(tNode!.mMeshes![Int(i) - 1])]!.pointee
-		 meshes.append(processMesh(mesh: &aMesh, scene: scene))
+		 meshes.append(processMesh(mesh: &aMesh, scene: scene!))
 	 }
     }
     if(Int((tNode?.mNumChildren)!) != 0){

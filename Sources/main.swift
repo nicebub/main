@@ -59,8 +59,8 @@ glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
 glfwSetScrollCallback(window, scrollCallback)
 glEnable(GLenum(GL_DEPTH_TEST))
 
-var lastX  = GLfloat(WIDTH)  / 2.0
-var lastY  = GLfloat(HEIGHT) / 2.0
+//var lastX  = GLfloat(WIDTH)  / 2.0
+//var lastY  = GLfloat(HEIGHT) / 2.0
 
 let fStride = MemoryLayout<GLfloat>.stride
 let uiStride = MemoryLayout<GLuint>.stride
@@ -69,11 +69,11 @@ print("sizes: float: \(fStride)")
 print("       UInt:  \(uiStride)")
 //glDeleteShader(vertexShader)
 //glDeleteShader(fragmentShader)
-var inVertexFile = "/Users/scott/Projects/main/Sources/basic.vs"
+let inVertexFile = "/Users/scott/Projects/main/Sources/basic.vs"
 let inFragmentFile = "/Users/scott/Projects/main/Sources/basic.frag"
-var lightFragmentFile = "/Users/scott/Projects/main/Sources/light.frag"
+//let lightFragmentFile = "/Users/scott/Projects/main/Sources/light.frag"
 let ourShader = Shader(vertexFile: inVertexFile, fragmentFile: inFragmentFile)
-    let lightShader = Shader(vertexFile: inVertexFile, fragmentFile: lightFragmentFile)
+//    let lightShader = Shader(vertexFile: inVertexFile, fragmentFile: lightFragmentFile)
 /*let cubePositions:[vec3] = [
   [ 0.0,  0.0,  0.0],
   [ 2.0,  5.0, -15.0],

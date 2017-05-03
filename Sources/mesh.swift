@@ -48,7 +48,7 @@ class Mesh {
 		var specularNr: GLuint = 0
         if( textures.count != 0){
 		for i in 0...textures.count - 1 {
-			glActiveTexture(GLenum(GL_TEXTURE0 + i))
+			glActiveTexture(GLenum(GL_TEXTURE0) + GLenum(i))
 			var number: String
 			let name: String = textures[i].type
 			var count = 0
@@ -64,7 +64,7 @@ class Mesh {
 			else {
 				continue
 			}
-			let names = name.components(separatedBy: "[0-9]")
+			_ = name.components(separatedBy: "[0-9]")
 			number = String(count)
 		    glUniform1i(glGetUniformLocation(shader.getProgram(), name + number), GLint(i))
 			glBindTexture(GLenum(GL_TEXTURE_2D), textures[i].id)
@@ -75,7 +75,7 @@ class Mesh {
 		glBindVertexArray(0)
         if(textures.count != 0){
             for a in 0...textures.count - 1 {
-                glActiveTexture(GLenum(GL_TEXTURE0 + a))
+                glActiveTexture(GLenum(GL_TEXTURE0) + GLenum(a))
                 glBindTexture(GLenum(GL_TEXTURE_2D), 0)
             }
         }
