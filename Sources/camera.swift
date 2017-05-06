@@ -20,7 +20,7 @@ enum Camera_Movement {
 
 let YAW: GLfloat = -90.0
 let PITCH: GLfloat = 0.0
-let SPEED: GLfloat = 5.0
+let SPEED: GLfloat = 1.0
 let SENSITIVITY: GLfloat = 0.25
 let ZOOM: GLfloat = 45.0
 
