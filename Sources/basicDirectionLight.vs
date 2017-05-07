@@ -7,12 +7,12 @@ layout (location = 2) in vec2 texCoord;
 out vec2 TexCoord;
 out vec3 FragPos;
 out vec3 Normal;
-out vec3 lightPosition;
+out vec4 lightPosition;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform vec3 LightPosition;
+uniform vec4 LightPosition;
 uniform mat3 transInv;
 
 void main(){
@@ -21,5 +21,5 @@ void main(){
 	TexCoord = texCoord;
 	Normal = transInv * normal;
 //	Normal = mat3(transpose(inverse(view * model))) * normal;
-	lightPosition = vec3(view * vec4(LightPosition, 1.0));
+	lightPosition = view * LightPosition;
 }

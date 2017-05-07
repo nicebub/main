@@ -24,16 +24,20 @@ var firstMouse = true
 var lightsOff = false
 var pCamera: Camera =  Camera(posX: 0.0, posY: 0.0, posZ: 3.0, upX: 0.0, upY: 1.0, upZ: 0.0, inYaw: yaw, inPitch: pitch, cameraFront)
 var movementDisabled = false
-var ambientStrength = vec3(1.0, 0.5, 0.31)
-var specularStrength = vec3(0.5, 0.5, 0.5)
-var diffuseStrength = vec3(1.0, 0.5, 0.31)
-var shininess = 32
+var ambientStrength = emerald.ambient
+var specularStrength = emerald.specular
+var diffuseStrength = emerald.diffuse
+//var shininess = emerald.shininess
+var shininess = 16.0
 var diff = 0.0
 var backgroundColor = vec3(0.0, 0.0, 0.0)
 var ourShaderName = "phongShader"
 var animationStopped = false
 var clockTime: Double = glfwGetTime()
 var lastClockTime: Double = clockTime
+var modelPosition = vec3(0.0, -1.75, 0.0)
+var modelPosition2 = vec3(0.0, -1.75, -20.0)
+var modelPosition3 = vec3(-1.0, -1.75, -5.0)
 func main(){
 
 //Initialize GLFW
@@ -80,15 +84,26 @@ print("sizes: float: \(fStride)")
 print("       UInt:  \(uiStride)")
 //glDeleteShader(vertexShader)
 //glDeleteShader(fragmentShader)
-let inVertexFile = "/Users/scott/Projects/main/Sources/basic.vs"
-let inFragmentFile = "/Users/scott/Projects/main/Sources/basic.frag"
+let inVertexFile = "/Users/scott/Projects/main/Sources/basicDirectionLight.vs"
+let inFragmentFile = "/Users/scott/Projects/main/Sources/basicDirectionLight.frag"
 let lightFragmentFile = "/Users/scott/Projects/main/Sources/light.frag"
 let lightVertexFile = "/Users/scott/Projects/main/Sources/light.vs"
 let phongVFile = "/Users/scott/Projects/main/Sources/phongVertex.vs"
 let phongFFile = "/Users/scott/Projects/main/Sources/phongVertex.frag"
+let inVertexPointFile = "/Users/scott/Projects/main/Sources/pointlight.vs"
+let inFragmentPointFile = "/Users/scott/Projects/main/Sources/pointlight.frag"
+let phongVPointVtexFile = "/Users/scott/Projects/main/Sources/phongVertexPointLight.vs"
+let phongVPointFragFile = "/Users/scott/Projects/main/Sources/phongVertexPointLight.frag"
+//let inVertexPointDebugFile = "/Users/scott/Projects/main/Sources/pointlightdebug.vs"
+//let inFragmentPointDebugFile = "/Users/scott/Projects/main/Sources/pointlightdebug.frag"
+//let inFragmentPointDebugFile2 = "/Users/scott/Projects/main/Sources/pointlightdebug2.frag"
 let phongShader = Shader(vertexFile: inVertexFile, fragmentFile: inFragmentFile)
 let lightShader = Shader(vertexFile: lightVertexFile, fragmentFile: lightFragmentFile)
 let phongVShader = Shader(vertexFile: phongVFile, fragmentFile: phongFFile)
+let phongShaderPoint = Shader(vertexFile: inVertexPointFile, fragmentFile: inFragmentPointFile)
+let phongVShaderPoint = Shader(vertexFile: phongVPointVtexFile, fragmentFile: phongVPointFragFile)
+//let phongShaderPointDebug = Shader(vertexFile: inVertexPointDebugFile, fragmentFile: inFragmentPointDebugFile)
+//let phongShaderPointDebug2 = Shader(vertexFile: inVertexPointDebugFile, fragmentFile: inFragmentPointDebugFile2)
 var ourShader = phongShader
 let _:[vec3] = [
   [ 0.0,  0.0,  0.0],
@@ -122,10 +137,10 @@ let vertices:[GLfloat] = [
 	0.5, 1.0
 ]*/
 //let inModel = "/Users/scott/Projects/main/meshes/tank/t_34_obj.obj"
-// let inModel = "/Users/scott/Projects/main/meshes/nanosuit/nanosuit.obj"
-let inModel = "/Users/scott/Projects/main/meshes/cube.obj"
+ let inModel = "/Users/scott/Projects/main/meshes/nanosuit/nanosuit.obj"
+let dModel = "/Users/scott/Projects/main/meshes/cube2.obj"
  let ourModel: Model = Model(path: inModel)
-
+// let debugModel: Model = Model(path: dModel)
  var lightVAO: GLuint = 0
 var VBO: GLuint = 0
 //    var EBO: GLuint = 0
@@ -143,9 +158,15 @@ var VBO: GLuint = 0
  glEnableVertexAttribArray(0)
  glBindVertexArray(0)
 
- var lightPosition = vec3(1.0, -1.75, 2.0)
- var lastLightPosition = vec3(0.0, 0.0, 0.0)
- var lightColor = vec3(2.0, 0.7, 1.3)
+ var lightPosition = vec4(0.0, -1.75, 0.0, 1.0)
+ var lastLightPosition = vec4(0.0, 0.0, 0.0, 1.0)
+ let lightColor = vec3(1.0, 1.0, 1.0)
+ let lightDirection = vec4(-0.2, -0.2, -0.2, 0.0)
+ let constantLoc = glGetUniformLocation(ourShader.getProgram(), "light.constant")
+ glUniform1f(constantLoc, 1.0)
+ glUniform1f(glGetUniformLocation(ourShader.getProgram(), "light.linear"), 0.22)
+ glUniform1f(glGetUniformLocation(ourShader.getProgram(), "light.quadratic"), 0.09)
+
 while (glfwWindowShouldClose(window) == GL_FALSE ){
 	if(!animationStopped){
 		clockTime = glfwGetTime()
@@ -160,6 +181,12 @@ while (glfwWindowShouldClose(window) == GL_FALSE ){
 	case "phongVShader":
 		ourShader = phongVShader
 		break
+	case "phongVShaderPoint":
+		ourShader = phongVShaderPoint
+		break
+		case "phongShaderPoint":
+		ourShader = phongShaderPoint
+		break
 	default:
 		ourShader = phongShader
 		break
@@ -172,9 +199,9 @@ while (glfwWindowShouldClose(window) == GL_FALSE ){
     doMovement(window: window)
 
 	//Use light blue/green to clear the screen
-glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0)
+	glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0)
   // Clear the screen (window background)
-  glClear(GLenum(GL_COLOR_BUFFER_BIT) | GLenum(GL_DEPTH_BUFFER_BIT))
+	glClear(GLenum(GL_COLOR_BUFFER_BIT) | GLenum(GL_DEPTH_BUFFER_BIT))
 
   ourShader.use()
   if(!animationStopped){
@@ -186,15 +213,15 @@ glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0)
   else {
 	  lightPosition = lastLightPosition
   }
-  lightColor.x = GLfloat(sin(clockTime * 2.0))
-  lightColor.y = GLfloat(sin(clockTime * 0.7))
-  lightColor.z = GLfloat(sin(clockTime * 1.3))
+//  lightColor.x = GLfloat(sin(clockTime * 2.0))
+ // lightColor.y = GLfloat(sin(clockTime * 0.7))
+  //lightColor.z = GLfloat(sin(clockTime * 1.3))
 
   var view = pCamera.getViewMatrix()
-  let lightColorLoc = glGetUniformLocation(ourShader.getProgram(), "lightColor")
-  let ambientLightLoc = glGetUniformLocation(ourShader.getProgram(), "light.ambient")
-  let diffuseLightLoc = glGetUniformLocation(ourShader.getProgram(), "light.diffuse")
-  let specularLightLoc = glGetUniformLocation(ourShader.getProgram(), "light.specular")
+  var lightColorLoc = glGetUniformLocation(ourShader.getProgram(), "lightColor")
+  var ambientLightLoc = glGetUniformLocation(ourShader.getProgram(), "light.ambient")
+  var diffuseLightLoc = glGetUniformLocation(ourShader.getProgram(), "light.diffuse")
+  var specularLightLoc = glGetUniformLocation(ourShader.getProgram(), "light.specular")
   let diffuseColor = lightColor * 0.5
   let ambientColor = diffuseColor * 0.2
   glUniform3f(ambientLightLoc, ambientColor.x, ambientColor.y, ambientColor.z)
@@ -206,37 +233,38 @@ glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0)
   else{
 	  glUniform3f(lightColorLoc, 0.0, 0.0, 0.0)
   }
-  let cameraPositionLoc = glGetUniformLocation(ourShader.getProgram(), "cameraPosition")
+  var cameraPositionLoc = glGetUniformLocation(ourShader.getProgram(), "cameraPosition")
   glUniform3f(cameraPositionLoc, pCamera.position.x, pCamera.position.y, pCamera.position.z)
 
-  let specularStrengthLoc = glGetUniformLocation(ourShader.getProgram(), "material.specular")
+  var specularStrengthLoc = glGetUniformLocation(ourShader.getProgram(), "material.specular")
   withUnsafePointer(to: &specularStrength, {
 	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { specularStrengthP in
 	  	glUniform3f(specularStrengthLoc, specularStrength.x, specularStrength.y, specularStrength.z)}
   })
 
-  let shininessLoc = glGetUniformLocation(ourShader.getProgram(), "material.shininess")
+  var shininessLoc = glGetUniformLocation(ourShader.getProgram(), "material.shininess")
   glUniform1f(shininessLoc, GLfloat(shininess))
 
-  let diffLoc = glGetUniformLocation(ourShader.getProgram(), "diff")
+  var diffLoc = glGetUniformLocation(ourShader.getProgram(), "diff")
   glUniform1f(diffLoc, GLfloat(diff))
 
-  let ambientStrengthLoc = glGetUniformLocation(ourShader.getProgram(), "material.ambient")
+  var ambientStrengthLoc = glGetUniformLocation(ourShader.getProgram(), "material.ambient")
   withUnsafePointer(to: &ambientStrength, {
 	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { ambientStrengthP in
 	  	glUniform3f(ambientStrengthLoc, ambientStrength.x, ambientStrength.y, ambientStrength.z)}
   })
-  let diffuseStrengthLoc = glGetUniformLocation(ourShader.getProgram(), "material.diffuse")
+  var diffuseStrengthLoc = glGetUniformLocation(ourShader.getProgram(), "material.diffuse")
   withUnsafePointer(to: &diffuseStrength, {
 	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { diffuseStrengthP in
 		  glUniform3f(diffuseStrengthLoc, diffuseStrength.x, diffuseStrength.y, diffuseStrength.z)}
   })
-	let lightPositionLoc = glGetUniformLocation(ourShader.getProgram(), "LightPosition")
+	var lightPositionLoc = glGetUniformLocation(ourShader.getProgram(), "LightPosition")
 	withUnsafePointer(to: &lightPosition, {
 		$0.withMemoryRebound(to: GLfloat.self, capacity: 1) { lightPositionP in
-			glUniform3f(lightPositionLoc, lightPosition.x, lightPosition.y, lightPosition.z)}
+			glUniform4f(lightPositionLoc, lightPosition.x, lightPosition.y, lightPosition.z, lightPosition.w)}
 		})
-
+	var lightDirLoc = glGetUniformLocation(ourShader.getProgram(), "light.direction")
+	glUniform4f(lightDirLoc,lightDirection.x, lightDirection.y, lightDirection.z , lightDirection.w)
   let aspectRatio =  GLfloat(WIDTH) / GLfloat(HEIGHT)
   var projection = SGLMath.perspective(radians(pCamera.zoom!), aspectRatio, 0.1, 100.0)
   var viewLoc = glGetUniformLocation(ourShader.getProgram(), "view")
@@ -258,15 +286,15 @@ glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0)
   var modelLoc = glGetUniformLocation(ourShader.getProgram(), "model")
     var model = mat4()
 //    model = SGLMath.translate(model, cubePosition)
-    model = SGLMath.translate(model, vec3(0.0, -1.75, 0.0))
+    model = SGLMath.translate(model, modelPosition)
 	model = SGLMath.scale(model, vec3(0.2, 0.2, 0.2))
     withUnsafePointer(to: &model, {
   	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { modelP in
   	  	glUniformMatrix4fv(modelLoc, 1, GLboolean(GL_FALSE), modelP)}
     })
-	let transInvLoc = glGetUniformLocation(ourShader.getProgram(), "transInv")
+	var transInvLoc = glGetUniformLocation(ourShader.getProgram(), "transInv")
 	var transInv: mat3
-	if(ourShaderName == "phongVShader"){
+	if(ourShaderName == "phongVShader" || ourShaderName == "phongVShaderPoint"){
 		transInv = mat3(transpose(inverse(model)))
 	}
 	else{
@@ -277,6 +305,174 @@ glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0)
 			glUniformMatrix3fv(transInvLoc, 1, GLboolean(GL_FALSE), transInvP)}
 	})
 	ourModel.draw(ourShader)
+
+	/*
+//start drawing the first debug cube
+
+	phongShaderPointDebug.use()
+
+    lightColorLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "lightColor")
+    ambientLightLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "light.ambient")
+    diffuseLightLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "light.diffuse")
+    specularLightLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "light.specular")
+    glUniform3f(ambientLightLoc, ambientColor.x, ambientColor.y, ambientColor.z)
+    glUniform3f(diffuseLightLoc, diffuseColor.x, diffuseColor.y, diffuseColor.z)
+    glUniform3f(specularLightLoc, 1.0, 1.0, 1.0)
+    if(!lightsOff){
+  	  glUniform3f(lightColorLoc, lightColor.x, lightColor.y, lightColor.z)
+    }
+    else{
+  	  glUniform3f(lightColorLoc, 0.0, 0.0, 0.0)
+    }
+    cameraPositionLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "cameraPosition")
+    glUniform3f(cameraPositionLoc, pCamera.position.x, pCamera.position.y, pCamera.position.z)
+
+    specularStrengthLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "material.specular")
+    withUnsafePointer(to: &specularStrength, {
+  	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { specularStrengthP in
+  	  	glUniform3f(specularStrengthLoc, specularStrength.x, specularStrength.y, specularStrength.z)}
+    })
+
+    shininessLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "material.shininess")
+    glUniform1f(shininessLoc, GLfloat(shininess))
+
+    diffLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "diff")
+    glUniform1f(diffLoc, GLfloat(diff))
+
+    ambientStrengthLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "material.ambient")
+    withUnsafePointer(to: &ambientStrength, {
+  	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { ambientStrengthP in
+  	  	glUniform3f(ambientStrengthLoc, ambientStrength.x, ambientStrength.y, ambientStrength.z)}
+    })
+    diffuseStrengthLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "material.diffuse")
+    withUnsafePointer(to: &diffuseStrength, {
+  	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { diffuseStrengthP in
+  		  glUniform3f(diffuseStrengthLoc, diffuseStrength.x, diffuseStrength.y, diffuseStrength.z)}
+    })
+  	lightPositionLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "LightPosition")
+  	withUnsafePointer(to: &lightPosition, {
+  		$0.withMemoryRebound(to: GLfloat.self, capacity: 1) { lightPositionP in
+  			glUniform4f(lightPositionLoc, lightPosition.x, lightPosition.y, lightPosition.z, lightPosition.w)}
+  		})
+  	lightDirLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "light.direction")
+  	glUniform4f(lightDirLoc,lightDirection.x, lightDirection.y, lightDirection.z , lightDirection.w)
+    viewLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "view")
+    withUnsafePointer(to: &view, {
+  	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { viewP in
+  	  	glUniformMatrix4fv(viewLoc, 1, GLboolean(GL_FALSE), viewP)}
+    })
+    projectionLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "projection")
+    withUnsafePointer(to: &projection, {
+  	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { projectionP in
+  	  	glUniformMatrix4fv(projectionLoc, 1, GLboolean(GL_FALSE), projectionP)}
+    })
+    //used to have this last iteration
+  //  glBindVertexArray(VAO)
+    modelLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "model")
+	var debugCube = mat4()
+	debugCube = SGLMath.translate(debugCube, modelPosition2)
+	debugCube = SGLMath.scale(debugCube, vec3(0.2, 0.2, 0.2))
+	withUnsafePointer(to: &debugCube, {
+		$0.withMemoryRebound(to: GLfloat.self, capacity: 1) { dCubeP in
+			glUniformMatrix4fv(modelLoc, 1, GLboolean(GL_FALSE), dCubeP)}
+	})
+  	transInvLoc = glGetUniformLocation(phongShaderPointDebug.getProgram(), "transInv")
+  	transInv = mat3(transpose(inverse(view * model)))
+  	withUnsafePointer(to: &transInv, {
+  		$0.withMemoryRebound(to: GLfloat.self, capacity: 1) { transInvP in
+  			glUniformMatrix3fv(transInvLoc, 1, GLboolean(GL_FALSE), transInvP)}
+  	})
+	debugModel.draw(phongShaderPointDebug)
+//	glBindVertexArray(lightVAO)
+//	glDrawArrays(GLenum(GL_TRIANGLES), 0, 36)
+
+	/*Start Drawing the light itself */
+
+
+	//end of first debug cube
+	//second debug cube
+		phongShaderPointDebug2.use()
+
+	    lightColorLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "lightColor")
+	    ambientLightLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "light.ambient")
+	    diffuseLightLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "light.diffuse")
+	    specularLightLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "light.specular")
+	    glUniform3f(ambientLightLoc, ambientColor.x, ambientColor.y, ambientColor.z)
+	    glUniform3f(diffuseLightLoc, diffuseColor.x, diffuseColor.y, diffuseColor.z)
+	    glUniform3f(specularLightLoc, 1.0, 1.0, 1.0)
+	    if(!lightsOff){
+	  	  glUniform3f(lightColorLoc, lightColor.x, lightColor.y, lightColor.z)
+	    }
+	    else{
+	  	  glUniform3f(lightColorLoc, 0.0, 0.0, 0.0)
+	    }
+	    cameraPositionLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "cameraPosition")
+	    glUniform3f(cameraPositionLoc, pCamera.position.x, pCamera.position.y, pCamera.position.z)
+
+	    specularStrengthLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "material.specular")
+	    withUnsafePointer(to: &specularStrength, {
+	  	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { specularStrengthP in
+	  	  	glUniform3f(specularStrengthLoc, specularStrength.x, specularStrength.y, specularStrength.z)}
+	    })
+
+	    shininessLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "material.shininess")
+	    glUniform1f(shininessLoc, GLfloat(shininess))
+
+	    diffLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "diff")
+	    glUniform1f(diffLoc, GLfloat(diff))
+
+	    ambientStrengthLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "material.ambient")
+	    withUnsafePointer(to: &ambientStrength, {
+	  	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { ambientStrengthP in
+	  	  	glUniform3f(ambientStrengthLoc, ambientStrength.x, ambientStrength.y, ambientStrength.z)}
+	    })
+	    diffuseStrengthLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "material.diffuse")
+	    withUnsafePointer(to: &diffuseStrength, {
+	  	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { diffuseStrengthP in
+	  		  glUniform3f(diffuseStrengthLoc, diffuseStrength.x, diffuseStrength.y, diffuseStrength.z)}
+	    })
+	  	lightPositionLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "LightPosition")
+	  	withUnsafePointer(to: &lightPosition, {
+	  		$0.withMemoryRebound(to: GLfloat.self, capacity: 1) { lightPositionP in
+	  			glUniform4f(lightPositionLoc, lightPosition.x, lightPosition.y, lightPosition.z, lightPosition.w)}
+	  		})
+	  	lightDirLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "light.direction")
+	  	glUniform4f(lightDirLoc,lightDirection.x, lightDirection.y, lightDirection.z , lightDirection.w)
+	    viewLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "view")
+	    withUnsafePointer(to: &view, {
+	  	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { viewP in
+	  	  	glUniformMatrix4fv(viewLoc, 1, GLboolean(GL_FALSE), viewP)}
+	    })
+	    projectionLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "projection")
+	    withUnsafePointer(to: &projection, {
+	  	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { projectionP in
+	  	  	glUniformMatrix4fv(projectionLoc, 1, GLboolean(GL_FALSE), projectionP)}
+	    })
+	    //used to have this last iteration
+	  //  glBindVertexArray(VAO)
+	    modelLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "model")
+		debugCube = mat4()
+		debugCube = SGLMath.translate(debugCube, modelPosition3)
+		debugCube = SGLMath.scale(debugCube, vec3(0.2, 0.2, 0.2))
+		withUnsafePointer(to: &debugCube, {
+			$0.withMemoryRebound(to: GLfloat.self, capacity: 1) { dCubeP in
+				glUniformMatrix4fv(modelLoc, 1, GLboolean(GL_FALSE), dCubeP)}
+		})
+	  	transInvLoc = glGetUniformLocation(phongShaderPointDebug2.getProgram(), "transInv")
+	  	transInv = mat3(transpose(inverse(view * model)))
+	  	withUnsafePointer(to: &transInv, {
+	  		$0.withMemoryRebound(to: GLfloat.self, capacity: 1) { transInvP in
+	  			glUniformMatrix3fv(transInvLoc, 1, GLboolean(GL_FALSE), transInvP)}
+	  	})
+		debugModel.draw(phongShaderPointDebug2)
+	//	glBindVertexArray(lightVAO)
+	//	glDrawArrays(GLenum(GL_TRIANGLES), 0, 36)
+
+		/*Start Drawing the light itself */
+
+	//end of second debug cube
+
+*/
 
 	lightShader.use()
 
@@ -293,7 +489,7 @@ glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0)
     })
 
     var light = mat4()
-    light = SGLMath.translate(light, lightPosition)
+    light = SGLMath.translate(light, vec3(lightPosition.x, lightPosition.y, lightPosition.z))
     light = SGLMath.scale(light, vec3(0.2, 0.2, 0.2))
     withUnsafePointer(to: &light, {
         $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { lightP in
@@ -314,6 +510,7 @@ glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1.0)
 	})
 	glBindVertexArray(lightVAO)
 	glDrawArrays(GLenum(GL_TRIANGLES), 0, 36)
+
 
 	glBindVertexArray(0)
 
@@ -359,7 +556,7 @@ func keyCallback(window: OpaquePointer?, key: Int32, scancode: Int32, action: In
 			glfwSetWindowShouldClose(window, GL_TRUE)
 		}
 
-		if(keys[Int(GLFW_KEY_W)]){
+		if(keys[Int(GLFW_KEY_R)]){
 			glPolygonMode( GLenum(GL_FRONT_AND_BACK), GLenum(GL_LINE))
 		}
 
@@ -385,6 +582,13 @@ func keyCallback(window: OpaquePointer?, key: Int32, scancode: Int32, action: In
 			if keys[Int(GLFW_KEY_2)] {
 				ourShaderName = "phongVShader"
 			}
+			if keys[Int(GLFW_KEY_3)] {
+				ourShaderName = "phongShaderPoint"
+			}
+			if keys[Int(GLFW_KEY_4)] {
+				ourShaderName = "phongVShaderPoint"
+			}
+
 			if keys[Int(GLFW_KEY_LEFT_BRACKET)] {
 				ambientStrength.z -= 0.01
 				backgroundColor.x -= 0.01
@@ -495,6 +699,37 @@ func doMovement(window: OpaquePointer?)
     if keys[Int(GLFW_KEY_RIGHT)] {
 		pCamera.processKeyboard( direction: .right, deltaTime: deltaTime)
     }
+    if keys[Int(GLFW_KEY_W)] {
+		modelPosition.z -= 0.1
+    }
+    if keys[Int(GLFW_KEY_S)] {
+		modelPosition.z += 0.1
+    }
+    if keys[Int(GLFW_KEY_A)] {
+		modelPosition.x -= 0.1
+    }
+    if keys[Int(GLFW_KEY_D)] {
+		modelPosition.x += 0.1
+    }
+/*    if keys[Int(GLFW_KEY_Y)] {
+		UInt32.z -= 0.1
+    }
+    if keys[Int(GLFW_KEY_H)] {
+		modelPosition2.z += 0.1
+    }
+    if keys[Int(GLFW_KEY_G)] {
+		modelPosition2.x -= 0.1
+    }
+    if keys[Int(GLFW_KEY_J)] {
+		modelPosition2.x += 0.1
+    }
+    if keys[Int(GLFW_KEY_T)] {
+		modelPosition2.y -= 0.1
+    }
+    if keys[Int(GLFW_KEY_U)] {
+		modelPosition2.y += 0.1
+    }
+	*/
 	if keys[Int(GLFW_KEY_EQUAL)] {
 		pCamera.zoom = pCamera.zoom! - 1
 		if pCamera.zoom! <= 1.0 {

@@ -29,7 +29,7 @@ class LightMesh {
 	private func setupMesh(inVBO: GLuint, inEBO: GLuint ){
 		glGenVertexArrays(1, &VAO)
 //		defer { glDeleteVertexArrays( 1, &VAO) }
-//		glGenBuffers(1, &(super.VBO))
+//		glGenBuffers(1, &(VBO))
 //		defer { glDeleteBuffers( 1, &VBO) }
 //		glGenBuffers(1, &(inEBO))
 //		defer { glDeleteBuffers( 1, &EBO) }
