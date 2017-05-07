@@ -7,11 +7,13 @@ class Model{
      var meshes: [Mesh]
      var directory: String
 	 var textures_loaded: [Texture]
+	 var materials: [Material]
 
  init(path: String){
 	 meshes = []
 	 directory = ""
     textures_loaded = []
+	materials = []
 	 loadModel(path)
  }
  public func draw(_ shader: Shader){
@@ -115,7 +117,10 @@ let AI_SCENE_FLAGS_INCOMPLETE = 0x1
     if(count != 0){
 	 for i in 0...count - 1 {
 		 var myString: aiString = aiString()
+		 var myDiffuse: aiColor4D = aiColor4D(r: 0.0, g: 0.0, b: 0.0, a: 0.0)
 		 aiGetMaterialTexture(&newMat!, type, i, &myString, nil, nil, nil, nil, nil, nil)
+		 aiGetMaterialColor(&newMat!, "$clr.diffuse", 0, 0, &myDiffuse)
+//		 print("the Material Diffuse Color: ", myDiffuse)
 		 var skip: GLboolean = GLboolean(GL_FALSE)
         if(textures_loaded.count != 0){
 		 for j in 0...textures_loaded.count - 1 {

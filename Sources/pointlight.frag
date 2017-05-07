@@ -2,7 +2,7 @@
 
 struct Material {
 	sampler2D diffuse;
-//	vec3 ambient;
+	vec3 ambient;
 //	vec3 diffuse;
 	sampler2D specular;
 	float shininess;
