@@ -28,7 +28,7 @@ var ambientStrength = emerald.ambient
 var specularStrength = emerald.specular
 var diffuseStrength = emerald.diffuse
 //var shininess = emerald.shininess
-var shininess = 16.0
+var shininess = 32.0
 var diff = 0.0
 var backgroundColor = vec3(0.0, 0.0, 0.0)
 var ourShaderName = "phongShader"
@@ -94,6 +94,8 @@ let inVertexPointFile = "/Users/scott/Projects/main/Sources/pointlight.vs"
 let inFragmentPointFile = "/Users/scott/Projects/main/Sources/pointlight.frag"
 let phongVPointVtexFile = "/Users/scott/Projects/main/Sources/phongVertexPointLight.vs"
 let phongVPointFragFile = "/Users/scott/Projects/main/Sources/phongVertexPointLight.frag"
+let flashlightFile = "/Users/scott/Projects/main/Sources/flashlight.vs"
+let flashlightFFile = "/Users/scott/Projects/main/Sources/flashlight.frag"
 //let inVertexPointDebugFile = "/Users/scott/Projects/main/Sources/pointlightdebug.vs"
 //let inFragmentPointDebugFile = "/Users/scott/Projects/main/Sources/pointlightdebug.frag"
 //let inFragmentPointDebugFile2 = "/Users/scott/Projects/main/Sources/pointlightdebug2.frag"
@@ -104,7 +106,8 @@ let phongShaderPoint = Shader(vertexFile: inVertexPointFile, fragmentFile: inFra
 let phongVShaderPoint = Shader(vertexFile: phongVPointVtexFile, fragmentFile: phongVPointFragFile)
 //let phongShaderPointDebug = Shader(vertexFile: inVertexPointDebugFile, fragmentFile: inFragmentPointDebugFile)
 //let phongShaderPointDebug2 = Shader(vertexFile: inVertexPointDebugFile, fragmentFile: inFragmentPointDebugFile2)
-var ourShader = phongShader
+let flashlightShader = Shader(vertexFile: flashlightFile, fragmentFile: flashlightFFile)
+var ourShader = flashlightShader
 let _:[vec3] = [
   [ 0.0,  0.0,  0.0],
   [ 2.0,  5.0, -15.0],
@@ -183,6 +186,8 @@ while (glfwWindowShouldClose(window) == GL_FALSE ){
 		case "phongShaderPoint":
 		ourShader = phongShaderPoint
 		break
+	case "flashlightShader":
+		ourShader = flashlightShader
 	default:
 		ourShader = phongShader
 		break
@@ -259,6 +264,20 @@ while (glfwWindowShouldClose(window) == GL_FALSE ){
 	  $0.withMemoryRebound(to: GLfloat.self, capacity: 1) { diffuseStrengthP in
 		  glUniform3f(diffuseStrengthLoc, diffuseStrength.x, diffuseStrength.y, diffuseStrength.z)}
   })
+
+var lightPositionLoc = glGetUniformLocation(ourShader.getProgram(), "LightPosition")
+withUnsafePointer(to: &(pCamera.position), {
+	$0.withMemoryRebound(to: GLfloat.self, capacity: 1) { lightPositionP in
+		glUniform4f(lightPositionLoc, pCamera.position.x, pCamera.position.y, pCamera.position.z, lightPosition.w)}
+	})
+var lightDirLoc = glGetUniformLocation(ourShader.getProgram(), "light.direction")
+glUniform4f(lightDirLoc, pCamera.front.x, pCamera.front.y, pCamera.front.z , lightDirection.w)
+var lightSpotCutOffLoc = glGetUniformLocation(ourShader.getProgram(), "light.cutOff")
+glUniform1f(lightSpotCutOffLoc, cos(radians(12.5)))
+
+
+// use this if not flashlight shader
+if(ourShaderName != "flashlightShader") {
 	var lightPositionLoc = glGetUniformLocation(ourShader.getProgram(), "LightPosition")
 	withUnsafePointer(to: &lightPosition, {
 		$0.withMemoryRebound(to: GLfloat.self, capacity: 1) { lightPositionP in
@@ -266,6 +285,10 @@ while (glfwWindowShouldClose(window) == GL_FALSE ){
 		})
 	var lightDirLoc = glGetUniformLocation(ourShader.getProgram(), "light.direction")
 	glUniform4f(lightDirLoc,lightDirection.x, lightDirection.y, lightDirection.z , lightDirection.w)
+}
+
+
+
   let aspectRatio =  GLfloat(WIDTH) / GLfloat(HEIGHT)
   var projection = SGLMath.perspective(radians(pCamera.zoom!), aspectRatio, 0.1, 100.0)
   var viewLoc = glGetUniformLocation(ourShader.getProgram(), "view")
@@ -588,6 +611,9 @@ func keyCallback(window: OpaquePointer?, key: Int32, scancode: Int32, action: In
 			}
 			if keys[Int(GLFW_KEY_4)] {
 				ourShaderName = "phongVShaderPoint"
+			}
+			if keys[Int(GLFW_KEY_5)] {
+				ourShaderName = "flashlightShader"
 			}
 
 			if keys[Int(GLFW_KEY_LEFT_BRACKET)] {
