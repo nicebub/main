@@ -17,11 +17,11 @@ uniform mat3 transInv;
 
 void main(){
 	gl_Position = projection * view * model * vec4(position, 1.0f);
-//	FragPos = vec3(view * model * vec4(position, 1.0f));
-	FragPos = vec3(model * vec4(position, 1.0f));
+	FragPos = vec3(view * model * vec4(position, 1.0f));
+//	FragPos = vec3(model * vec4(position, 1.0f));
 	TexCoord = texCoord;
 	Normal = transInv * normal;
 //	Normal = mat3(transpose(inverse(view * model))) * normal;
-//	lightPosition = view * LightPosition;
-	lightPosition =LightPosition;
+	lightPosition = view * LightPosition;
+//	lightPosition =LightPosition;
 }

@@ -41,9 +41,9 @@ uniform Light light;
 void main(){
 	vec3 norm = normalize(Normal);
 	vec4 tLight = lightPosition - vec4(FragPos, 1.0);
-	float distance = length(tLight) / 10;
+	float distance = length(tLight);
 	float attenuation = 1.0f / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
-	attenuation = 0.5;
+//	attenuation = 0.5;
 	vec4 lightDir = normalize(tLight);
 	vec3 lightDir3 = vec3(lightDir.x, lightDir.y, lightDir.z);
 	vec3 cameraDir = normalize(cameraPosition - FragPos);
@@ -54,9 +54,9 @@ void main(){
 	vec3 diffuse = light.diffuse * (diff * vec3(texture(texture_diffuse1, TexCoord)));
 	vec3 ambient = vec3(texture(texture_diffuse1, TexCoord)) * light.ambient;
 //	color = vec4(ambient + diffuse + specular, 1.0f) * vec4(texture(texture_diffuse1,  TexCoord));
-	ambient = ambient * (1 - distance);
-	diffuse = diffuse * (1 - distance);
-	specular = specular * (1 - distance);
+	ambient *= attenuation;
+	diffuse *= attenuation;
+	specular *= attenuation;
 	color = vec4(ambient + diffuse + specular , 1.0f);
 
 }
