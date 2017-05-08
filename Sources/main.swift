@@ -162,11 +162,6 @@ var VBO: GLuint = 0
  var lastLightPosition = vec4(0.0, 0.0, 0.0, 1.0)
  let lightColor = vec3(1.0, 1.0, 1.0)
  let lightDirection = vec4(-0.2, -0.2, -0.2, 0.0)
- let constantLoc = glGetUniformLocation(ourShader.getProgram(), "light.constant")
- glUniform1f(constantLoc, 1.0)
- glUniform1f(glGetUniformLocation(ourShader.getProgram(), "light.linear"), 0.22)
- glUniform1f(glGetUniformLocation(ourShader.getProgram(), "light.quadratic"), 0.09)
-
 while (glfwWindowShouldClose(window) == GL_FALSE ){
 	if(!animationStopped){
 		clockTime = glfwGetTime()
@@ -222,6 +217,12 @@ while (glfwWindowShouldClose(window) == GL_FALSE ){
   var ambientLightLoc = glGetUniformLocation(ourShader.getProgram(), "light.ambient")
   var diffuseLightLoc = glGetUniformLocation(ourShader.getProgram(), "light.diffuse")
   var specularLightLoc = glGetUniformLocation(ourShader.getProgram(), "light.specular")
+  let constantLoc = glGetUniformLocation(ourShader.getProgram(), "light.constant")
+  glUniform1f(constantLoc, 1.0)
+  glUniform1f(glGetUniformLocation(ourShader.getProgram(), "light.linear"), 0.22)
+  glUniform1f(glGetUniformLocation(ourShader.getProgram(), "light.quadratic"), 0.09)
+  //glUniform
+
   let diffuseColor = lightColor * 0.5
   let ambientColor = diffuseColor * 0.2
   glUniform3f(ambientLightLoc, ambientColor.x, ambientColor.y, ambientColor.z)
